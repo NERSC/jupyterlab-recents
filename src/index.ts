@@ -1,7 +1,11 @@
 import {
-  JupyterFrontEnd, JupyterFrontEndPlugin
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
 
+import {
+  IStateDB,
+} from '@jupyterlab/coreutils';
 
 /**
  * Initialization data for the jupyterlab-recents extension.
@@ -9,7 +13,8 @@ import {
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-recents',
   autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
+  requires: [IStateDB],
+  activate: (app: JupyterFrontEnd, stateDB: IStateDB) => {
     console.log('JupyterLab extension jupyterlab-recents is activated!');
   }
 };
