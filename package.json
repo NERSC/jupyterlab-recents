@@ -1,0 +1,43 @@
+{
+  "name": "jupyterlab-recents",
+  "version": "0.1.0",
+  "description": "Tracck recent files and folders.",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "homepage": "https://github.com/tslaton/jupyterlab-recents",
+  "bugs": {
+    "url": "https://github.com/tslaton/jupyterlab-recents/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": "Trevor Slaton",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/index.css",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tslaton/jupyterlab-recents.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib && rimraf tsconfig.tsbuildinfo",
+    "prepare": "npm run clean && npm run build",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^1.0.0-rc.0"
+  },
+  "devDependencies": {
+    "rimraf": "^2.6.1",
+    "typescript": "~3.5.2"
+  },
+  "jupyterlab": {
+    "extension": true
+  }
+}
