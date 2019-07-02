@@ -7,14 +7,18 @@ import {
   IStateDB,
 } from '@jupyterlab/coreutils';
 
+import {
+  IMainMenu
+} from '@jupyterlab/mainmenu';
+
 /**
  * Initialization data for the jupyterlab-recents extension.
  */
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-recents',
   autoStart: true,
-  requires: [IStateDB],
-  activate: (app: JupyterFrontEnd, stateDB: IStateDB) => {
+  requires: [IStateDB, IMainMenu],
+  activate: (app: JupyterFrontEnd, stateDB: IStateDB, mainMenu: IMainMenu) => {
     console.log('JupyterLab extension jupyterlab-recents is activated!');
   }
 };
