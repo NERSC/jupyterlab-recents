@@ -1,6 +1,6 @@
 # jupyterlab-recents
 
-Tracck recent files and folders.
+Track recent files and folders.
 
 
 ## Prerequisites
