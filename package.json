@@ -1,7 +1,7 @@
 {
   "name": "jupyterlab-recents",
   "version": "0.1.0",
-  "description": "Tracck recent files and folders.",
+  "description": "Track recent files and folders.",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -33,7 +33,8 @@
   "dependencies": {
     "@jupyterlab/application": "^1.0.0",
     "@jupyterlab/coreutils": "^3.0.0",
-    "@jupyterlab/mainmenu": "^1.0.0"
+    "@jupyterlab/mainmenu": "^1.0.0",
+    "@jupyterlab/docmanager": "^1.0.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",
