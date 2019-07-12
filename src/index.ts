@@ -9,7 +9,7 @@ import {
 } from '@jupyterlab/coreutils';
 
 import {
-  IMainMenu
+  IMainMenu,
 } from '@jupyterlab/mainmenu';
 
 import {
@@ -53,14 +53,11 @@ class RecentsManager {
   public recentsMenu: Menu;
   public recentsChanged = new Signal<this, Array<types.Recent>>(this)
   private serverRoot: string;
-  // private commands: CommandRegistry;
   private stateDB: IStateDB;
   private _recents: Array<types.Recent>;
 
   constructor(commands: CommandRegistry, stateDB: IStateDB) {
     this.serverRoot = PageConfig.getOption('serverRoot');
-    // this.commands = commands;
-    // console.log(this.commands);
     this.stateDB = stateDB;
     // This menu will appear in the File menu
     this.recentsMenu = new Menu({ commands });
@@ -73,6 +70,7 @@ class RecentsManager {
 
   get recents(): Array<types.Recent> {
     const recents = this._recents || [];
+    console.log('local recents: ', recents);
     return recents.filter(r => r.root === this.serverRoot);
   }
 
@@ -84,44 +82,67 @@ class RecentsManager {
   syncRecentsMenu() {
     this.recentsMenu.clearItems();
     const recents = this.recents;
-    if (recents.length > 0) {
-      recents.forEach(recent => {
-        this.recentsMenu.addItem({
-          command: CommandIDs.openRecent,
-          args: { recent },
+    const files = recents.filter(r => r.contentType !== 'directory');
+    const directories = recents.filter(r => r.contentType === 'directory');
+    [directories, files].forEach(rs => {
+      if (rs.length > 0) {
+        rs.forEach(recent => {
+          console.log('path in menu: ', recent.path);
+          this.recentsMenu.addItem({
+            command: CommandIDs.openRecent,
+            args: { recent },
+          });
         });
-      });
-      this.recentsMenu.addItem({ type: 'separator' });
-    }
+        this.recentsMenu.addItem({ type: 'separator' });
+      }
+    });
     this.recentsMenu.addItem({
       command: CommandIDs.clearRecents,
     });
   }
 
   async loadRecents() {
-    // const list = await this.stateDB.list({ ids: StateIDs.recents });
-    // console.log('list: ', list);
-    // const recents = await this.stateDB.fetch(StateIDs.recents);
-    // console.log('loaded recents: ', recents);
-    // return recents;
-    console.log('loadRecents NOP');
+    const recents = await this.stateDB.fetch(StateIDs.recents);
+    this.recents = (recents as Array<types.Recent>) || [];
+    // this.stateDB.fetch(StateIDs.recents).then(recents => {
+    //   console.log('loaded: ', recents);
+    //   this.recents = (recents as Array<types.Recent>) || [];
+    // })
   }
 
   async saveRecents(recents: Array<types.Recent>) {
+    console.log('saving: ', recents);
     await this.stateDB.save(StateIDs.recents, recents);
   }
 
-  addRecent(path: string, contentType: string) {
+  async addRecent(path: string, contentType: string) {
     const recent: types.Recent = {
       root: this.serverRoot,
       path: path,
       contentType: contentType,
     };
-    console.log('recent: ', JSON.stringify(recent));
+    console.log('addRecent: ', JSON.stringify(recent));
+    const directories = this.recents.filter(r => r.contentType === 'directory');
+    const files = this.recents.filter(r => r.contentType !== 'directory');
+    const destination = contentType === 'directory' ? directories : files;
+    // Check if it's already present; if so remove it
+    const existingIndex = destination.findIndex(r => r.path === path);
+    if (existingIndex >= 0 ) {
+      destination.splice(existingIndex, 1);
+    }
+    // Add to the front of the list
+    destination.unshift(recent);
+    // Keep up to 10 of each type of recent path
+    if (destination.length > 10) {
+      destination.pop();
+    }
+    await this.saveRecents(directories.concat(files));
+    await this.loadRecents();
   }
 
   async clearRecents() {
     await this.stateDB.remove(StateIDs.recents);
+    await this.loadRecents();
   }
 }
 
@@ -139,19 +160,23 @@ const extension: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab extension jupyterlab-recents is activated!');
     const { commands } = app;
     const recentsManager = new RecentsManager(commands, stateDB);
-    await recentsManager.loadRecents();
+    // await recentsManager.loadRecents();
 
     docManager.activateRequested.connect(async (_, path) => {
+      console.log('activateRequested');
       const item = await docManager.services.contents.get(path, {
         content: false
       });
       const fileType = app.docRegistry.getFileTypeForModel(item);
       const contentType = fileType.contentType;
-      recentsManager.addRecent(path, contentType);
+      console.log('path: ', path, 'contentType: ', contentType);
+      await recentsManager.addRecent(path, contentType);
       // Add the containing directory, too
       if (contentType !== 'directory') {
         const parent = path.slice(0, path.lastIndexOf('/'));
-        recentsManager.addRecent(parent, 'directory');
+        if (parent && path.lastIndexOf('/') !== -1) {
+          await recentsManager.addRecent(parent, 'directory');
+        }
       }
     });
     // Commands
@@ -162,13 +187,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       },
       label: args => {
         const recent = args.recent as types.Recent;
-        return recent.path;
-      }
+        const prefix = recent.root === '/' ? '/' : `${recent.root}/`;
+        return `${prefix}${recent.path}`;
+      },
     });
     commands.addCommand(CommandIDs.clearRecents, {
       execute: async () => {
         await recentsManager.clearRecents();
-      }
+      },
+      label: () => 'Clear Recents',
     });
     // Main menu
     mainMenu.fileMenu.addGroup([{
