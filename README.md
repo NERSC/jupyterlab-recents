@@ -6,6 +6,7 @@ Track recent files and folders.
 ## Prerequisites
 
 * JupyterLab
+* For development, an active `conda` environment with `nodejs`
 
 ## Installation
 
@@ -29,4 +30,3 @@ To rebuild the package and the JupyterLab app:
 npm run build
 jupyter lab build
 ```
-
