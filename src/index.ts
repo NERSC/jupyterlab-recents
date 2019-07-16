@@ -70,7 +70,6 @@ class RecentsManager {
 
   get recents(): Array<types.Recent> {
     const recents = this._recents || [];
-    console.log('local recents: ', recents);
     return recents.filter(r => r.root === this.serverRoot);
   }
 
@@ -87,7 +86,6 @@ class RecentsManager {
     [directories, files].forEach(rs => {
       if (rs.length > 0) {
         rs.forEach(recent => {
-          console.log('path in menu: ', recent.path);
           this.recentsMenu.addItem({
             command: CommandIDs.openRecent,
             args: { recent },
@@ -104,14 +102,9 @@ class RecentsManager {
   async loadRecents() {
     const recents = await this.stateDB.fetch(StateIDs.recents);
     this.recents = (recents as Array<types.Recent>) || [];
-    // this.stateDB.fetch(StateIDs.recents).then(recents => {
-    //   console.log('loaded: ', recents);
-    //   this.recents = (recents as Array<types.Recent>) || [];
-    // })
   }
 
   async saveRecents(recents: Array<types.Recent>) {
-    console.log('saving: ', recents);
     await this.stateDB.save(StateIDs.recents, recents);
   }
 
@@ -121,7 +114,6 @@ class RecentsManager {
       path: path,
       contentType: contentType,
     };
-    console.log('addRecent: ', JSON.stringify(recent));
     const directories = this.recents.filter(r => r.contentType === 'directory');
     const files = this.recents.filter(r => r.contentType !== 'directory');
     const destination = contentType === 'directory' ? directories : files;
@@ -151,7 +143,7 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: PluginIDs.recents,
   autoStart: true,
   requires: [IStateDB, IMainMenu, IDocumentManager],
-  activate: async (
+  activate: (
     app: JupyterFrontEnd,
     stateDB: IStateDB,
     mainMenu: IMainMenu,
@@ -160,21 +152,18 @@ const extension: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab extension jupyterlab-recents is activated!');
     const { commands } = app;
     const recentsManager = new RecentsManager(commands, stateDB);
-    // await recentsManager.loadRecents();
 
     docManager.activateRequested.connect(async (_, path) => {
-      console.log('activateRequested');
       const item = await docManager.services.contents.get(path, {
         content: false
       });
       const fileType = app.docRegistry.getFileTypeForModel(item);
       const contentType = fileType.contentType;
-      console.log('path: ', path, 'contentType: ', contentType);
       await recentsManager.addRecent(path, contentType);
       // Add the containing directory, too
       if (contentType !== 'directory') {
-        const parent = path.slice(0, path.lastIndexOf('/'));
-        if (parent && path.lastIndexOf('/') !== -1) {
+        const parent = path.lastIndexOf('/') > 0 ? path.slice(0, path.lastIndexOf('/')) : '';
+        if (parent) {
           await recentsManager.addRecent(parent, 'directory');
         }
       }
@@ -187,8 +176,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       },
       label: args => {
         const recent = args.recent as types.Recent;
-        const prefix = recent.root === '/' ? '/' : `${recent.root}/`;
-        return `${prefix}${recent.path}`;
+        const needSlash = !recent.root.endsWith('/') && !recent.path.startsWith('/');
+        const slash = needSlash ? '/' : '';
+        return `${recent.root}${slash}${recent.path}`;
       },
     });
     commands.addCommand(CommandIDs.clearRecents, {
@@ -201,7 +191,47 @@ const extension: JupyterFrontEndPlugin<void> = {
     mainMenu.fileMenu.addGroup([{
       type: 'submenu' as Menu.ItemType,
       submenu: recentsManager.recentsMenu,
-    }], 0);
+    }], 1);
+    // Try to merge with existing Group 1
+    try {
+      const groups = (mainMenu.fileMenu as any)._groups;
+      let numRankOneGroups = 0;
+      let openGroupIndex = -1;
+      for (let i = 0; i < groups.length; i++) {
+        const group = groups[i];
+        if (group.rank === 1) {
+          numRankOneGroups += 1;
+          if (openGroupIndex < 0) {
+            openGroupIndex = i;
+          }
+        }
+      }
+      if (numRankOneGroups === 2) {
+        const openGroup = groups[openGroupIndex];
+        openGroup.size = openGroup.size + 1;
+        groups.splice(openGroupIndex + 1, 1);
+        const fileMenu = (mainMenu.fileMenu as any).menu;
+        const fileMenuItems = fileMenu._items;
+        let removeSeparators = false;
+        for (let i = fileMenuItems.length - 1; i > 0; i--) {
+          const fileMenuItem = fileMenuItems[i];
+          if (fileMenuItem.command === 'filebrowser:open-path') {
+            break;
+          }
+          if (removeSeparators && fileMenuItem.type === 'separator') {
+            fileMenu.removeItemAt(i);
+          }
+          else if (fileMenuItem.type === 'submenu') {
+            const label = fileMenuItem.submenu.title.label;
+            if (label === 'Recents') {
+              removeSeparators = true;
+            }
+          }
+        }
+      }
+    }
+    catch (e) {}
+    recentsManager.loadRecents();
   }
 };
 
