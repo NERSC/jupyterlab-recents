@@ -49,6 +49,18 @@ namespace types {
   }
 }
 
+namespace utils {
+  export function mergePaths(root:string, path: string) {
+    if (root.endsWith('/')) {
+      root = root.slice(0, -1);
+    }
+    if (path.endsWith('/')) {
+      path = path.slice(1);
+    }
+    return `${root}/${path}`;
+  }
+}
+
 class RecentsManager {
   public recentsMenu: Menu;
   public recentsChanged = new Signal<this, Array<types.Recent>>(this)
@@ -163,22 +175,19 @@ const extension: JupyterFrontEndPlugin<void> = {
       // Add the containing directory, too
       if (contentType !== 'directory') {
         const parent = path.lastIndexOf('/') > 0 ? path.slice(0, path.lastIndexOf('/')) : '';
-        if (parent) {
-          await recentsManager.addRecent(parent, 'directory');
-        }
+        await recentsManager.addRecent(parent, 'directory');
       }
     });
     // Commands
     commands.addCommand(CommandIDs.openRecent, {
       execute: args => {
         const recent = args.recent as types.Recent;
-        commands.execute('filebrowser:open-path', { path: recent.path });
+        const path = recent.path === '' ? '/' : recent.path;
+        commands.execute('filebrowser:open-path', { path });
       },
       label: args => {
         const recent = args.recent as types.Recent;
-        const needSlash = !recent.root.endsWith('/') && !recent.path.startsWith('/');
-        const slash = needSlash ? '/' : '';
-        return `${recent.root}${slash}${recent.path}`;
+        return utils.mergePaths(recent.root, recent.path);
       },
     });
     commands.addCommand(CommandIDs.clearRecents, {
