@@ -76,6 +76,8 @@ class RecentsManager {
   private saveRoutine: any;
   // Will store a Timeout call that periodically runs to validate the recents
   private validator: any;
+  // Whether there are local changes sent to be recorded without verification
+  private awaitingSaveCompletion = false;
 
   constructor(commands: CommandRegistry, stateDB: IStateDB, contents: ContentsManager) {
     this.serverRoot = PageConfig.getOption('serverRoot');
@@ -143,21 +145,17 @@ class RecentsManager {
   }
 
   async validateRecents() {
-    console.log('validating recents...');
     clearTimeout(this.validator);
     // Unless triggered directly, recents will be validated every 12 seconds
     this.validator = setTimeout(this.validateRecents.bind(this), 12 * 1000);
     const recents = this.recents;
-    console.log('recents: ', recents);
     const invalidPathsOrNulls = await Promise.all(recents.map(async r => {
       try {
         await this.contentsManager.get(r.path, { content: false });
-        console.log('validated: ', r.path);
         return null;
       }
       catch (e) {
         if (e.response.status === 404) {
-          console.log('found invalid: ', r.path);
           return r.path;
         }
       }
@@ -199,7 +197,25 @@ class RecentsManager {
     clearTimeout(this.saveRoutine);
     // Save _recents 500 ms after the last time saveRecents has been called
     this.saveRoutine = setTimeout(
-      () => this.stateDB.save(StateIDs.recents, this._recents),
+      async () => {
+        // If there's a previous request pending, wait 500 ms and try again
+        if (this.awaitingSaveCompletion) {
+          this.saveRecents();
+        }
+        else {
+          this.awaitingSaveCompletion = true;
+          try {
+            await this.stateDB.save(StateIDs.recents, this._recents);
+            this.awaitingSaveCompletion = false;
+          }
+          catch (e) {
+            this.awaitingSaveCompletion = false;
+            console.log('Saving recents failed');
+            // Try again
+            this.saveRecents();
+          }
+        }
+      },
       500,
     );
   }
@@ -223,11 +239,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       const item = await docManager.services.contents.get(path, {
         content: false
       });
-      console.log('activate: ', path);
       const fileType = app.docRegistry.getFileTypeForModel(item);
       const contentType = fileType.contentType;
       recentsManager.addRecent(path, contentType);
-      console.log('recents before second add: ', JSON.stringify(recentsManager.recents));
       // Add the containing directory, too
       if (contentType !== 'directory') {
         const parent = path.lastIndexOf('/') > 0 ? path.slice(0, path.lastIndexOf('/')) : '';
