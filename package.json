@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-recents",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Track recent files and folders.",
   "keywords": [
     "jupyter",
