@@ -92,12 +92,12 @@ class RecentsManager {
     });
   }
 
-  get recents(): Array<types.Recent> {
+  get recents(): types.Recent[] {
     const recents = this._recents || [];
     return recents.filter(r => r.root === this.serverRoot);
   }
 
-  set recents(recents: Array<types.Recent>) {
+  set recents(recents: types.Recent[]) {
     // Keep track of any recents pertaining to other roots
     const otherRecents = this._recents.filter(r => r.root !== this.serverRoot);
     const allRecents = recents.filter(r => r.root === this.serverRoot).concat(otherRecents);
@@ -189,7 +189,7 @@ class RecentsManager {
 
   async loadRecents() {
     const recents = await this.stateDB.fetch(StateIDs.recents);
-    this._recents = (recents as Array<types.Recent>) || [];
+    this._recents = (recents as types.Recent[]) || [];
     this.recentsChanged.emit(this.recents);
   }
 
