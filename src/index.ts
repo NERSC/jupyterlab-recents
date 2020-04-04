@@ -2,35 +2,14 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
-
-import {
-  IStateDB,
-  PageConfig,
-} from '@jupyterlab/coreutils';
-
-import {
-  ContentsManager,
-} from '@jupyterlab/services';
-
-import {
-  IMainMenu,
-} from '@jupyterlab/mainmenu';
-
-import {
-  IDocumentManager,
-} from '@jupyterlab/docmanager';
-
-import {
-  Menu,
-} from '@phosphor/widgets';
-
-import {
-  CommandRegistry,
-} from '@phosphor/commands';
-
-import {
-  Signal,
-} from '@phosphor/signaling';
+import { PageConfig } from '@jupyterlab/coreutils';
+import { IDocumentManager } from '@jupyterlab/docmanager';
+import { IMainMenu } from '@jupyterlab/mainmenu';
+import { ContentsManager } from '@jupyterlab/services';
+import { IStateDB } from '@jupyterlab/statedb';
+import { CommandRegistry } from '@lumino/commands';
+import { Signal } from '@lumino/signaling';
+import { Menu } from '@lumino/widgets';
 
 namespace PluginIDs {
   export const recents = 'jupyterlab-recents';
@@ -50,7 +29,7 @@ namespace types {
     root: string;
     path: string;
     contentType: string;
-  }
+  };
 }
 
 namespace utils {
@@ -67,7 +46,7 @@ namespace utils {
 
 class RecentsManager {
   public recentsMenu: Menu;
-  private recentsChanged = new Signal<this, types.Recent[]>(this)
+  private recentsChanged = new Signal<this, types.Recent[]>(this);
   private serverRoot: string;
   private stateDB: IStateDB;
   private contentsManager: ContentsManager;
@@ -79,7 +58,11 @@ class RecentsManager {
   // Whether there are local changes sent to be recorded without verification
   private awaitingSaveCompletion = false;
 
-  constructor(commands: CommandRegistry, stateDB: IStateDB, contents: ContentsManager) {
+  constructor(
+    commands: CommandRegistry,
+    stateDB: IStateDB,
+    contents: ContentsManager
+  ) {
     this.serverRoot = PageConfig.getOption('serverRoot');
     this.stateDB = stateDB;
     this.contentsManager = contents;
@@ -87,20 +70,24 @@ class RecentsManager {
     this.recentsMenu = new Menu({ commands });
     this.recentsMenu.title.label = 'Recents';
     // Listen for updates to _recents
-    this.recentsChanged.connect((_, ) => {
+    this.recentsChanged.connect((_) => {
       this.syncRecentsMenu();
     });
   }
 
   get recents(): types.Recent[] {
     const recents = this._recents || [];
-    return recents.filter(r => r.root === this.serverRoot);
+    return recents.filter((r) => r.root === this.serverRoot);
   }
 
   set recents(recents: types.Recent[]) {
     // Keep track of any recents pertaining to other roots
-    const otherRecents = this._recents.filter(r => r.root !== this.serverRoot);
-    const allRecents = recents.filter(r => r.root === this.serverRoot).concat(otherRecents);
+    const otherRecents = this._recents.filter(
+      (r) => r.root !== this.serverRoot
+    );
+    const allRecents = recents
+      .filter((r) => r.root === this.serverRoot)
+      .concat(otherRecents);
     this._recents = allRecents;
     this.saveRecents();
     this.recentsChanged.emit(this.recents);
@@ -118,12 +105,12 @@ class RecentsManager {
       contentType,
     };
     const recents = this.recents;
-    const directories = recents.filter(r => r.contentType === 'directory');
-    const files = recents.filter(r => r.contentType !== 'directory');
+    const directories = recents.filter((r) => r.contentType === 'directory');
+    const files = recents.filter((r) => r.contentType !== 'directory');
     const destination = contentType === 'directory' ? directories : files;
     // Check if it's already present; if so remove it
-    const existingIndex = destination.findIndex(r => r.path === path);
-    if (existingIndex >= 0 ) {
+    const existingIndex = destination.findIndex((r) => r.path === path);
+    if (existingIndex >= 0) {
       destination.splice(existingIndex, 1);
     }
     // Add to the front of the list
@@ -137,7 +124,7 @@ class RecentsManager {
 
   removeRecents(paths: string[]) {
     const recents = this.recents;
-    this.recents = recents.filter(r => paths.indexOf(r.path) === -1);
+    this.recents = recents.filter((r) => paths.indexOf(r.path) === -1);
   }
 
   clearRecents() {
@@ -149,18 +136,19 @@ class RecentsManager {
     // Unless triggered directly, recents will be validated every 12 seconds
     this.validator = setTimeout(this.validateRecents.bind(this), 12 * 1000);
     const recents = this.recents;
-    const invalidPathsOrNulls = await Promise.all(recents.map(async r => {
-      try {
-        await this.contentsManager.get(r.path, { content: false });
-        return null;
-      }
-      catch (e) {
-        if (e.response.status === 404) {
-          return r.path;
+    const invalidPathsOrNulls = await Promise.all(
+      recents.map(async (r) => {
+        try {
+          await this.contentsManager.get(r.path, { content: false });
+          return null;
+        } catch (e) {
+          if (e.response.status === 404) {
+            return r.path;
+          }
         }
-      }
-    }));
-    const invalidPaths = invalidPathsOrNulls.filter(x => x !== null);
+      })
+    );
+    const invalidPaths = invalidPathsOrNulls.filter((x) => x !== null);
     if (invalidPaths.length > 0) {
       this.removeRecents(invalidPaths);
     }
@@ -169,11 +157,11 @@ class RecentsManager {
   syncRecentsMenu() {
     this.recentsMenu.clearItems();
     const recents = this.recents;
-    const files = recents.filter(r => r.contentType !== 'directory');
-    const directories = recents.filter(r => r.contentType === 'directory');
-    [directories, files].forEach(rs => {
+    const files = recents.filter((r) => r.contentType !== 'directory');
+    const directories = recents.filter((r) => r.contentType === 'directory');
+    [directories, files].forEach((rs) => {
       if (rs.length > 0) {
-        rs.forEach(recent => {
+        rs.forEach((recent) => {
           this.recentsMenu.addItem({
             command: CommandIDs.openRecent,
             args: { recent },
@@ -196,28 +184,23 @@ class RecentsManager {
   saveRecents() {
     clearTimeout(this.saveRoutine);
     // Save _recents 500 ms after the last time saveRecents has been called
-    this.saveRoutine = setTimeout(
-      async () => {
-        // If there's a previous request pending, wait 500 ms and try again
-        if (this.awaitingSaveCompletion) {
+    this.saveRoutine = setTimeout(async () => {
+      // If there's a previous request pending, wait 500 ms and try again
+      if (this.awaitingSaveCompletion) {
+        this.saveRecents();
+      } else {
+        this.awaitingSaveCompletion = true;
+        try {
+          await this.stateDB.save(StateIDs.recents, this._recents);
+          this.awaitingSaveCompletion = false;
+        } catch (e) {
+          this.awaitingSaveCompletion = false;
+          console.log('Saving recents failed');
+          // Try again
           this.saveRecents();
         }
-        else {
-          this.awaitingSaveCompletion = true;
-          try {
-            await this.stateDB.save(StateIDs.recents, this._recents);
-            this.awaitingSaveCompletion = false;
-          }
-          catch (e) {
-            this.awaitingSaveCompletion = false;
-            console.log('Saving recents failed');
-            // Try again
-            this.saveRecents();
-          }
-        }
-      },
-      500,
-    );
+      }
+    }, 500);
   }
 }
 
@@ -229,35 +212,40 @@ const extension: JupyterFrontEndPlugin<void> = {
     app: JupyterFrontEnd,
     stateDB: IStateDB,
     mainMenu: IMainMenu,
-    docManager: IDocumentManager,
+    docManager: IDocumentManager
   ) => {
     console.log('JupyterLab extension jupyterlab-recents is activated!');
-    const { commands, serviceManager } = app;;
-    const recentsManager = new RecentsManager(commands, stateDB, serviceManager.contents);
+    const { commands, serviceManager } = app;
+    const recentsManager = new RecentsManager(
+      commands,
+      stateDB,
+      serviceManager.contents
+    );
 
     docManager.activateRequested.connect(async (_, path) => {
       const item = await docManager.services.contents.get(path, {
-        content: false
+        content: false,
       });
       const fileType = app.docRegistry.getFileTypeForModel(item);
       const contentType = fileType.contentType;
       recentsManager.addRecent(path, contentType);
       // Add the containing directory, too
       if (contentType !== 'directory') {
-        const parent = path.lastIndexOf('/') > 0 ? path.slice(0, path.lastIndexOf('/')) : '';
+        const parent =
+          path.lastIndexOf('/') > 0 ? path.slice(0, path.lastIndexOf('/')) : '';
         recentsManager.addRecent(parent, 'directory');
       }
     });
     // Commands
     commands.addCommand(CommandIDs.openRecent, {
-      execute: async args => {
+      execute: async (args) => {
         const recent = args.recent as types.Recent;
         const path = recent.path === '' ? '/' : recent.path;
         await commands.execute('filebrowser:open-path', { path });
         // If path not found, validating will remove it after an error message
         return recentsManager.validateRecents();
       },
-      label: args => {
+      label: (args) => {
         const recent = args.recent as types.Recent;
         return utils.mergePaths(recent.root, recent.path);
       },
@@ -267,10 +255,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       label: () => 'Clear Recents',
     });
     // Main menu
-    mainMenu.fileMenu.addGroup([{
-      type: 'submenu' as Menu.ItemType,
-      submenu: recentsManager.recentsMenu,
-    }], 1);
+    mainMenu.fileMenu.addGroup(
+      [
+        {
+          type: 'submenu' as Menu.ItemType,
+          submenu: recentsManager.recentsMenu,
+        },
+      ],
+      1
+    );
     // Try to merge with existing Group 1
     try {
       const groups = (mainMenu.fileMenu as any)._groups;
@@ -299,8 +292,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
           if (removeSeparators && fileMenuItem.type === 'separator') {
             fileMenu.removeItemAt(i);
-          }
-          else if (fileMenuItem.type === 'submenu') {
+          } else if (fileMenuItem.type === 'submenu') {
             const label = fileMenuItem.submenu.title.label;
             if (label === 'Recents') {
               removeSeparators = true;
@@ -308,10 +300,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
         }
       }
+    } catch (e) {
+      console.debug(e);
     }
-    catch (e) {}
     recentsManager.init();
-  }
+  },
 };
 
 export default extension;
