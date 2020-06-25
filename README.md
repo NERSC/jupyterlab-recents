@@ -30,3 +30,21 @@ To rebuild the package and the JupyterLab app:
 npm run build
 jupyter lab build
 ```
+## Testing 
+Download Firefox browser if not already installed: https://www.mozilla.org/en-US/firefox/new/
+
+Download Selenium:
+```bash
+conda install -c conda-forge selenium
+```
+Download Pytest:
+```bash
+conda install -c anaconda pytest
+```
+Change directory to this repo after cloning and run:
+```bash
+pytest test_folder.py
+```
+```bash
+pytest test_file.py
+```
