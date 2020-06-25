@@ -1,0 +1,74 @@
+import pytest
+import time
+import json
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+class TestAddfavs():
+    def setup_method(self, method):
+        self.driver = webdriver.Firefox()
+        self.vars = {}
+  
+    def teardown_method(self, method):
+        self.driver.quit()
+  
+    def test_recents(self):
+        self.driver.get("http://localhost:8888/lab/")
+        self.driver.implicitly_wait(100)
+        WebDriverWait(self.driver, 100)
+        tests_folder = self.driver.find_element(By.XPATH, "//span[contains(text(),'tests')]")
+        #tests_folder = WebDriverWait(self.driver, 10).until(EC.visibility_of((By.XPATH, "//span[contains(text(),'tests')]")))
+        #tests_folder = wait.until(EC.element_to_be_clickable(By.XPATH, "//span[contains(text(),'tests')]"))
+        self.driver.implicitly_wait(100)
+        actions = ActionChains(self.driver)
+        actions.move_to_element(tests_folder)
+        actions.double_click(tests_folder).perform()
+        self.driver.implicitly_wait(100)
+
+        test_file = self.driver.find_element(By.XPATH, "//span[contains(text(),'test_file.rtf')]")
+        self.driver.implicitly_wait(30)
+        actions = ActionChains(self.driver)
+        actions.double_click(test_file).perform()
+
+        self.driver.implicitly_wait(30)
+        file_elem = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div[2]/ul/li[1]")
+        actions = ActionChains(self.driver)
+        self.driver.implicitly_wait(30)
+        actions.click(file_elem).perform()
+
+        recents = self.driver.find_element(By.XPATH, "//div[contains(text(),'Recents')]")
+        actions = ActionChains(self.driver)
+        self.driver.implicitly_wait(30)
+        actions.click(recents).perform()
+
+        folder_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'~/Desktop/jupyterlab-recents/tests')]")
+        assert folder_recent.text == "~/Desktop/jupyterlab-recents/tests"
+
+        file_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'~/Desktop/jupyterlab-recents/tests/test_file.rtf')]")
+        assert file_recent.text == "~/Desktop/jupyterlab-recents/tests/test_file.rtf"
+
+        clear_recents = self.driver.find_element(By.XPATH, "//div[contains(text(),'Clear Recents')]")
+        actions = ActionChains(self.driver)
+        self.driver.implicitly_wait(30)
+        actions.click(clear_recents).perform()
+        WebDriverWait(self.driver, 100)
+
+        #home_folder = self.driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[5]/div[2]/span[1]")
+        home_folder = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/div[2]/div[1]/div[6]/div[2]/span[1]")
+        #home_folder = self.driver.find_element(By.XPATH, "/html/body/div/div[3]/div[2]/div[1]/div[6]/div[2]/span[1]/svg")
+        actions = ActionChains(self.driver)
+        self.driver.implicitly_wait(30)
+        actions.click(home_folder).perform()
+
+
+if __name__ == '__main__':
+  setup_method()
+  test_recents()
+#   test_removefavs()
+  teardown_method()
