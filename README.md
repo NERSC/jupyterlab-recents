@@ -45,3 +45,12 @@ Change directory to this repo after cloning and run:
 ```bash
 pytest test_recents.py
 ```
+## Legacy Jupyterlab v1 Support
+
+Via NPM:
+```{bash}
+jupyter labextension install jupyterlab-recents@1.0.1
+```
+
+Or use the tagged 1.0.0 release at:
+https://github.com/NERSC/jupyterlab-recents/tree/v1.0.1
