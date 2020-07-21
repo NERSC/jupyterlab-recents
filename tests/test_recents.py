@@ -33,7 +33,7 @@ class TestAddfavs():
         self.driver.implicitly_wait(100)
 
         test_file = self.driver.find_element(By.XPATH, "//span[contains(text(),'test_file.rtf')]")
-        self.driver.implicitly_wait(30)
+        self.driver.implicitly_wait(100)
         actions = ActionChains(self.driver)
         actions.double_click(test_file).perform()
 
