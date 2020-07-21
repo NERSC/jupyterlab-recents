@@ -23,8 +23,6 @@ class TestAddfavs():
         self.driver.implicitly_wait(1000)
         WebDriverWait(self.driver, 100)
         tests_folder = self.driver.find_element(By.XPATH, "//span[contains(text(),'tests')]")
-        #tests_folder = WebDriverWait(self.driver, 10).until(EC.visibility_of((By.XPATH, "//span[contains(text(),'tests')]")))
-        #tests_folder = wait.until(EC.element_to_be_clickable(By.XPATH, "//span[contains(text(),'tests')]"))
         self.driver.implicitly_wait(1000)
         actions = ActionChains(self.driver)
         actions.move_to_element(tests_folder)
@@ -72,5 +70,4 @@ class TestAddfavs():
 if __name__ == '__main__':
   setup_method()
   test_recents()
-#   test_removefavs()
   teardown_method()
