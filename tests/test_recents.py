@@ -20,14 +20,15 @@ class TestAddfavs():
   
     def test_recents(self):
         self.driver.get("http://localhost:8888/lab/")
-        self.driver.implicitly_wait(100)
+        self.driver.implicitly_wait(1000)
         WebDriverWait(self.driver, 100)
         tests_folder = self.driver.find_element(By.XPATH, "//span[contains(text(),'tests')]")
         #tests_folder = WebDriverWait(self.driver, 10).until(EC.visibility_of((By.XPATH, "//span[contains(text(),'tests')]")))
         #tests_folder = wait.until(EC.element_to_be_clickable(By.XPATH, "//span[contains(text(),'tests')]"))
-        self.driver.implicitly_wait(100)
+        self.driver.implicitly_wait(1000)
         actions = ActionChains(self.driver)
         actions.move_to_element(tests_folder)
+        self.driver.implicitly_wait(5000)
         actions.double_click(tests_folder).perform()
         self.driver.implicitly_wait(100)
 
@@ -46,6 +47,7 @@ class TestAddfavs():
         actions = ActionChains(self.driver)
         self.driver.implicitly_wait(30)
         actions.click(recents).perform()
+        self.driver.implicitly_wait(1000)
 
         folder_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'~/Desktop/jupyterlab-recents/tests')]")
         assert folder_recent.text == "~/Desktop/jupyterlab-recents/tests"
