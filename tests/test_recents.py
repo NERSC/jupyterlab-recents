@@ -20,14 +20,15 @@ class TestAddfavs():
   
     def test_recents(self):
         self.driver.get("http://localhost:8888/lab/")
-        self.driver.implicitly_wait(30)
+        self.driver.implicitly_wait(40)
         # WebDriverWait(self.driver, 100)
         tests_folder = self.driver.find_element(By.XPATH, "//span[contains(text(),'tests')]")
         self.driver.implicitly_wait(30)
         actions = ActionChains(self.driver)
         actions.move_to_element(tests_folder)
-        print('before wait')
-        self.driver.implicitly_wait(30)
+        # print('before wait')
+        
+        self.driver.implicitly_wait(10)
         
         actions.double_click(tests_folder).perform()
         self.driver.implicitly_wait(30)
@@ -38,7 +39,7 @@ class TestAddfavs():
         actions.double_click(test_file).perform()
 
         self.driver.implicitly_wait(30)
-        file_elem = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div[2]/ul/li[1]")
+        file_elem = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div[2]/ul/li[1]") 
         actions = ActionChains(self.driver)
         self.driver.implicitly_wait(30)
         actions.click(file_elem).perform()
@@ -55,10 +56,23 @@ class TestAddfavs():
         file_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'~/Desktop/jupyterlab-recents/tests/test_file.rtf')]")
         assert file_recent.text == "~/Desktop/jupyterlab-recents/tests/test_file.rtf"
 
+        file_elem = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div[2]/ul/li[1]") 
+        actions.click(file_elem).perform()
+        self.driver.implicitly_wait(30)
+        #recents = self.driver.find_element(By.XPATH, "//div[contains(text(),'Recents')]")
+        #recents = self.driver.find_element(By.XPATH, "/html/body/div[2]/ul/li[6]")
+        recents = self.driver.find_element_by_css_selector("li.lm-Menu-item:nth-child(7)")
+        actions = ActionChains(self.driver)
+        actions.click(recents).perform()
         clear_recents = self.driver.find_element(By.XPATH, "//div[contains(text(),'Clear Recents')]")
         actions = ActionChains(self.driver)
         self.driver.implicitly_wait(30)
         actions.click(clear_recents).perform()
+        self.driver.implicitly_wait(30)
+        actions.click(file_elem).perform()
+        actions.click(recents).perform()
+        cleared_txt = self.driver.find_element(By.XPATH, "/html/body/div[3]/ul/li")
+        assert cleared_txt.text == "Clear Recents"
         # WebDriverWait(self.driver, 100)
 
         #home_folder = self.driver.find_element(By.XPATH, "/html/body/div[2]/div[3]/div[2]/div[1]/div[5]/div[2]/span[1]")
