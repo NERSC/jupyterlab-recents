@@ -50,10 +50,10 @@ class TestAddfavs():
         actions.click(recents).perform()
         self.driver.implicitly_wait(30)
 
-        folder_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'/private/tmp/jupyterlab-recents/tests')]")
+        folder_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'tmp/jupyterlab-recents/tests')]")
         assert folder_recent.text == "~/Desktop/jupyterlab-recents/tests"
 
-        file_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'/private/tmp/jupyterlab-recents/tests/test_file.rtf')]")
+        file_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'tmp/jupyterlab-recents/tests/test_file.rtf')]")
         assert file_recent.text == "~/Desktop/jupyterlab-recents/tests/test_file.rtf"
 
         # file_elem = self.driver.find_element(By.XPATH, "/html/body/div/div[2]/div[2]/ul/li[1]") 
