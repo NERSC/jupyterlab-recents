@@ -39,6 +39,8 @@ install:
 
 script: 
   - jupyter labextension list
+  - cp -r . /tmp/jupyterlab-recents
+  - cd /tmp/jupyterlab-recents
   - jupyter lab --port=8888 --NotebookApp.token='' &
   - sleep 30
   - pytest

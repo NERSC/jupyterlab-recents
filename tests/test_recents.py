@@ -28,7 +28,7 @@ class TestAddfavs():
         actions.move_to_element(tests_folder)
         # print('before wait')
         
-        self.driver.implicitly_wait(10)
+        #self.driver.implicitly_wait(10)
         
         actions.double_click(tests_folder).perform()
         self.driver.implicitly_wait(30)
@@ -48,7 +48,7 @@ class TestAddfavs():
         actions = ActionChains(self.driver)
         self.driver.implicitly_wait(30)
         actions.click(recents).perform()
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(30)
 
         folder_recent = self.driver.find_element(By.XPATH, "//div[contains(text(),'~/Desktop/jupyterlab-recents/tests')]")
         assert folder_recent.text == "~/Desktop/jupyterlab-recents/tests"
