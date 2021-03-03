@@ -1,6 +1,6 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin,
+  JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { PageConfig } from '@jupyterlab/coreutils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -33,7 +33,7 @@ namespace types {
 }
 
 namespace utils {
-  export function mergePaths(root: string, path: string) {
+  export function mergePaths(root: string, path: string): string {
     if (root.endsWith('/')) {
       root = root.slice(0, -1);
     }
@@ -70,23 +70,21 @@ class RecentsManager {
     this.recentsMenu = new Menu({ commands });
     this.recentsMenu.title.label = 'Recents';
     // Listen for updates to _recents
-    this.recentsChanged.connect((_) => {
+    this.recentsChanged.connect(_ => {
       this.syncRecentsMenu();
     });
   }
 
   get recents(): types.Recent[] {
     const recents = this._recents || [];
-    return recents.filter((r) => r.root === this.serverRoot);
+    return recents.filter(r => r.root === this.serverRoot);
   }
 
   set recents(recents: types.Recent[]) {
     // Keep track of any recents pertaining to other roots
-    const otherRecents = this._recents.filter(
-      (r) => r.root !== this.serverRoot
-    );
+    const otherRecents = this._recents.filter(r => r.root !== this.serverRoot);
     const allRecents = recents
-      .filter((r) => r.root === this.serverRoot)
+      .filter(r => r.root === this.serverRoot)
       .concat(otherRecents);
     this._recents = allRecents;
     this.saveRecents();
@@ -102,14 +100,14 @@ class RecentsManager {
     const recent: types.Recent = {
       root: this.serverRoot,
       path,
-      contentType,
+      contentType
     };
     const recents = this.recents;
-    const directories = recents.filter((r) => r.contentType === 'directory');
-    const files = recents.filter((r) => r.contentType !== 'directory');
+    const directories = recents.filter(r => r.contentType === 'directory');
+    const files = recents.filter(r => r.contentType !== 'directory');
     const destination = contentType === 'directory' ? directories : files;
     // Check if it's already present; if so remove it
-    const existingIndex = destination.findIndex((r) => r.path === path);
+    const existingIndex = destination.findIndex(r => r.path === path);
     if (existingIndex >= 0) {
       destination.splice(existingIndex, 1);
     }
@@ -124,7 +122,7 @@ class RecentsManager {
 
   removeRecents(paths: string[]) {
     const recents = this.recents;
-    this.recents = recents.filter((r) => paths.indexOf(r.path) === -1);
+    this.recents = recents.filter(r => paths.indexOf(r.path) === -1);
   }
 
   clearRecents() {
@@ -137,7 +135,7 @@ class RecentsManager {
     this.validator = setTimeout(this.validateRecents.bind(this), 12 * 1000);
     const recents = this.recents;
     const invalidPathsOrNulls = await Promise.all(
-      recents.map(async (r) => {
+      recents.map(async r => {
         try {
           await this.contentsManager.get(r.path, { content: false });
           return null;
@@ -148,7 +146,7 @@ class RecentsManager {
         }
       })
     );
-    const invalidPaths = invalidPathsOrNulls.filter((x) => x !== null);
+    const invalidPaths = invalidPathsOrNulls.filter(x => x !== null);
     if (invalidPaths.length > 0) {
       this.removeRecents(invalidPaths);
     }
@@ -157,21 +155,21 @@ class RecentsManager {
   syncRecentsMenu() {
     this.recentsMenu.clearItems();
     const recents = this.recents;
-    const files = recents.filter((r) => r.contentType !== 'directory');
-    const directories = recents.filter((r) => r.contentType === 'directory');
-    [directories, files].forEach((rs) => {
+    const files = recents.filter(r => r.contentType !== 'directory');
+    const directories = recents.filter(r => r.contentType === 'directory');
+    [directories, files].forEach(rs => {
       if (rs.length > 0) {
-        rs.forEach((recent) => {
+        rs.forEach(recent => {
           this.recentsMenu.addItem({
             command: CommandIDs.openRecent,
-            args: { recent },
+            args: { recent }
           });
         });
         this.recentsMenu.addItem({ type: 'separator' });
       }
     });
     this.recentsMenu.addItem({
-      command: CommandIDs.clearRecents,
+      command: CommandIDs.clearRecents
     });
   }
 
@@ -224,7 +222,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     docManager.activateRequested.connect(async (_, path) => {
       const item = await docManager.services.contents.get(path, {
-        content: false,
+        content: false
       });
       const fileType = app.docRegistry.getFileTypeForModel(item);
       const contentType = fileType.contentType;
@@ -238,29 +236,29 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
     // Commands
     commands.addCommand(CommandIDs.openRecent, {
-      execute: async (args) => {
+      execute: async args => {
         const recent = args.recent as types.Recent;
         const path = recent.path === '' ? '/' : recent.path;
         await commands.execute('filebrowser:open-path', { path });
         // If path not found, validating will remove it after an error message
         return recentsManager.validateRecents();
       },
-      label: (args) => {
+      label: args => {
         const recent = args.recent as types.Recent;
         return utils.mergePaths(recent.root, recent.path);
-      },
+      }
     });
     commands.addCommand(CommandIDs.clearRecents, {
       execute: () => recentsManager.clearRecents(),
-      label: () => 'Clear Recents',
+      label: () => 'Clear Recents'
     });
     // Main menu
     mainMenu.fileMenu.addGroup(
       [
         {
           type: 'submenu' as Menu.ItemType,
-          submenu: recentsManager.recentsMenu,
-        },
+          submenu: recentsManager.recentsMenu
+        }
       ],
       1
     );
@@ -304,7 +302,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       console.debug(e);
     }
     recentsManager.init();
-  },
+  }
 };
 
 export default extension;
