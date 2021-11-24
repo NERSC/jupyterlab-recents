@@ -1,3 +1,6 @@
+# This repo has been forked to jupyterlab-contrib, where you can find the current version.
+[https://github.com/jupyterlab-contrib/jupyterlab-recents](https://github.com/jupyterlab-contrib/jupyterlab-recents)
+
 # jupyterlab_recents
 
 ![Github Actions Status](https://github.com/NERSC/jupyterlab-recents/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/NERSC/jupyterlab-recents/main?urlpath=lab)
