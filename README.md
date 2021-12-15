@@ -3,7 +3,8 @@
 
 # jupyterlab_recents
 
-![Github Actions Status](https://github.com/NERSC/jupyterlab-recents/workflows/Build/badge.svg)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/NERSC/jupyterlab-recents/main?urlpath=lab)
+![Github Actions Status](https://github.com/NERSC/jupyterlab-recents/workflows/Build/badge.svg)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/NERSC/jupyterlab-recents/master?urlpath=lab)
 
 Track recent files and folders.
 
